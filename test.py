@@ -110,17 +110,6 @@ if __name__=="__main__":
             else:
                 i = 0
                 input_segmments = []
-
-            #             plate_value, plate_length = myNetwork.label_image_list(segmented_characters, 128)
-            #             plates_value.append(plate_value)
-            #             plates_length.append(plate_length)
-            #             if (len(plates_value) == 5):
-            #                 final_plate = get_average_plate_value(plates_value, plates_length)
-            #                 print final_plate
-            # elif (distance > 40):
-            #     plates_value = []
-            #     plates_length = []
-
                 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
