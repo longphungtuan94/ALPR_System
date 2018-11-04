@@ -12,52 +12,8 @@ import threading
 from collections import Counter
 import multiprocessing as mp
 
-plateDetector = PlateDetector(type_of_plate='RECT_PLATE')
-myNetwork = NeuralNetwork("model/128_0.50_ver2.pb", "model/128_0.50_labels_ver2.txt")
-# image_path = 'vnplate/vn1.jpg'
-    
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--path', help='path of image to be processed')
-# args = parser.parse_args()
-
-# if args.path:
-#     image_path = args.path
-
-# img = cv2.imread(image_path)
-# # cv2.imshow('original image', img)
-# # cv2.waitKey(0)
-# img = cv2.resize(img, (1024, 768))
-
-# img_height, img_width = img.shape[:2]
-# cropped_input_img = img[int(img_height/4):int(img_height*0.92), int(img_width*0.2):(img_width-int(img_width*0.2))] # Crop the image
-# # to limit the area to find contours
-# possible_plates = plateDetector.find_possible_plates(cropped_input_img)
-# if possible_plates:
-#     for plates in possible_plates:
-#         segmented_characters = segment_from_plate(plates)
-#         cv2.imshow('morphed', plateDetector.morphed_image)
-#         cv2.imshow('plate', plates)
-#         cv2.waitKey(0)
-#         if segmented_characters:
-#             myNetwork.label_image_list(segmented_characters, 128)
-
-
-# files = glob.glob('/Users/vhcsoft/OneDrive - Hanoi University of Science and Technology/Programming/Character_Segmentation/longplate/*.jpg')
-# for i in range(len(files)):
-#     img = cv2.imread(files[i])
-#     # img = cv2.resize(img, (1024, 768))
-#     img_height, img_width = img.shape[:2]
-#     cropped_input_img = img[int(img_height/4):int(img_height*0.92), int(img_width*0.2):(img_width-int(img_width*0.2))]
-#     possible_plates = plateDetector.find_possible_plates(cropped_input_img)
-#     if possible_plates:
-#         for plates in possible_plates:
-#             segmented_characters = segment_from_plate(plates)
-#             if segmented_characters:
-#                 myNetwork.label_image_list(segmented_characters, 128)
-#                 cv2.imshow('possible plates', plates)
-#                 cv2.waitKey(0)
-
-#### Plate Video Detection + Tracking
+plateDetector = PlateDetector(type_of_plate='RECT_PLATE') # Initialize the plate detector
+myNetwork = NeuralNetwork("model/128_0.50_ver2.pb", "model/128_0.50_labels_ver2.txt") # Initialize the Neural Network
 
 # calculates the distance between two points in the image
 def getDistance(pointA, pointB):
@@ -67,6 +23,7 @@ def tracking(previous_coordinate, current_coordinate):
     distance = getDistance(previous_coordinate, current_coordinate)
     return distance
 
+# Get the plate values in several frames and calculates the most possible plate value
 def get_average_plate_value(plates, plates_length):
     plates_to_be_considered = []
     number_char_on_plate = Counter(plates_length).most_common(1)[0][0]
