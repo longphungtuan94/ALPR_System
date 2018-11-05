@@ -20,8 +20,9 @@ This system can detect 2 types of license plate in Vietnam, rectangle plates and
 # Implementation
 - run `test.py` for testing
 
-# Result
-- ![Demo](ALPR_System/test_videos/Screen Shot 2018-11-05 at 2.33.44 PM.png)
+# ResultALPR_System
+- ![Demo](https://github.com/longphungtuan94/ALPR_System/blob/master/test_videos/screenshot_1.png)
+- ![Demo2](https://github.com/longphungtuan94/ALPR_System/blob/master/test_videos/screenshot_2.png)
 
 
 # References
