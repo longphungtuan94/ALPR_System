@@ -61,7 +61,7 @@ def recognized_plate(input_segmments, size):
     
     print("threading time: " + str(time.time() - t0))
 
-cap = cv2.VideoCapture('plate_3.MOV')
+cap = cv2.VideoCapture(1)
 coordinates = (0, 0)
 plates_value = []
 plates_length = []
@@ -115,3 +115,4 @@ if __name__=="__main__":
             break
     cap.release()
     cv2.destroyAllWindows()
+    #test
