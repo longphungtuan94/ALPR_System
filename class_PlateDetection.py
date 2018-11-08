@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from plate_features import *
+from segmentation import segment_characters_from_plate
 
 class PlateDetector():
     def __init__(self, type_of_plate):
@@ -20,6 +20,24 @@ class PlateDetector():
             return possible_plates
         else:
             return None
+
+    def find_characters_on_plate(self, plate):
+        if (self.type_of_plate == 0): # rectangle plate
+            charactersFound = segment_characters_from_plate(plate, 400)
+            if charactersFound:
+                return charactersFound
+        elif (self.type_of_plate == 1): # square plate
+            # divide the square plate into half to get a one line plate
+            plate_upper = plate[0:plate.shape[0]/2, 0:plate.shape[1]]
+            plate_lower = plate[plate.shape[0]/2: plate.shape[0], 0:plate.shape[1]]
+
+            # get the characters of the upper plate and the lower plate
+            upper_charactersFound = segment_characters_from_plate(plate_upper, 200)
+            lower_charactersFound = segment_characters_from_plate(plate_lower, 200)
+            if (upper_charactersFound and lower_charactersFound):
+                charactersFound = upper_charactersFound + lower_charactersFound
+                return charactersFound
+
 
     def preprocess(self, input_img):
         imgBlurred = cv2.GaussianBlur(input_img, (7, 7), 0) # old window was (5,5)
@@ -61,14 +79,17 @@ class PlateDetector():
             
         # Center of rectangle in source image
         center = ((x1 + x2)/2,(y1 + y2)/2)
+
         # Size of the upright rectangle bounding the rotated rectangle
         size = (x2-x1, y2-y1)
         M = cv2.getRotationMatrix2D((size[0]/2, size[1]/2), angle, 1.0)
+
         # Cropped upright rectangle
         cropped = cv2.getRectSubPix(plate, size, center)
         cropped = cv2.warpAffine(cropped, M, size)
         croppedW = H if H > W else W
         croppedH = H if H < W else W
+
         # Final cropped & rotated rectangle
         croppedRotated = cv2.getRectSubPix(cropped, (int(croppedW), int(croppedH)), (size[0]/2, size[1]/2))
         return croppedRotated
@@ -105,8 +126,6 @@ class PlateDetector():
             if validateRotationAndRatio(self.type_of_plate, min_rect):
                 x,y,w,h = cv2.boundingRect(cnt)
                 after_validation_img = input_img[y:y+h,x:x+w]
-                # cv2.imshow('after validation', after_validation_img)
-                # cv2.waitKey(0)
 
                 ##### Use this for plates in tilt position ######
                 # _rect = cv2.minAreaRect(cnt)
@@ -118,8 +137,70 @@ class PlateDetector():
                 if(isMaxWhite(after_validation_img)):
                     after_clean_plate_img, plateFound, coordinates = self.clean_plate(after_validation_img)
                     if plateFound:
-                        possible_plates.append(after_clean_plate_img)
-                        x1, y1, w1, h1 = coordinates
-                        coordinates = x1+x, y1+y
-                        self.corresponding_area.append(coordinates)
+                        self.characters_on_plate = self.find_characters_on_plate(after_clean_plate_img)
+                        if (self.characters_on_plate is not None and len(self.characters_on_plate) > 5):
+                            possible_plates.append(after_clean_plate_img)
+                            x1, y1, w1, h1 = coordinates
+                            coordinates = x1+x, y1+y
+                            self.corresponding_area.append(coordinates)
+                        # possible_plates.append(after_clean_plate_img)
+                        # x1, y1, w1, h1 = coordinates
+                        # coordinates = x1+x, y1+y
+                        # self.corresponding_area.append(coordinates)
         return possible_plates
+
+
+######### PLATE FEATURES #########
+# Check if a contour has the features of a plate
+def ratioCheck(type_of_plate, area, width, height):
+	if (type_of_plate == 0):
+		aspect = 4.272727 # ratio of the rectangle Vietnamese plate.
+		min = 3000  # minimum area of the plate
+		max = 30000 # maximum area of the plate
+
+		rmin = 3
+		rmax = 7
+	else:
+		aspect = 1
+		min = 4000
+		max = 30000
+
+		rmin = 0.5
+		rmax = 1.5
+
+	ratio = float(width) / float(height)
+	if ratio < 1:
+		ratio = 1 / ratio
+
+	if (area < min or area > max) or (ratio < rmin or ratio > rmax):
+		return False
+	return True
+
+# check the if the detected contour satisfies the white pixels by black pixels condition
+def isMaxWhite(plate):
+	avg = np.mean(plate)
+	if(avg >= 40): # old value was 115, second chosen value was 90
+		return True
+	else:
+ 		return False
+
+def validateRotationAndRatio(type_of_plate, rect):
+	plate_type = type_of_plate
+	(x, y), (width, height), rect_angle = rect
+
+	if(width>height):
+		angle = -rect_angle
+	else:
+		angle = 90 + rect_angle
+
+	if angle > 15:
+	 	return False
+
+	if height == 0 or width == 0:
+		return False
+
+	area = height*width
+	if not ratioCheck(plate_type, area,width,height):
+		return False
+	else:
+		return True
