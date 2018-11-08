@@ -23,7 +23,6 @@ def tracking(previous_coordinate, current_coordinate):
     distance = getDistance(previous_coordinate, current_coordinate)
     return distance
 
-# Get the plate values in several frames and calculates the most possible plate value
 def get_average_plate_value(plates, plates_length):
     plates_to_be_considered = []
     number_char_on_plate = Counter(plates_length).most_common(1)[0][0]
@@ -61,7 +60,7 @@ def recognized_plate(input_segmments, size):
     
     print("threading time: " + str(time.time() - t0))
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture('test_videos/plate_2.MOV')
 coordinates = (0, 0)
 plates_value = []
 plates_length = []
@@ -79,8 +78,6 @@ if __name__=="__main__":
             break
     
         frame = cv2.resize(frame, (1024, 768))
-        
-        
         frame_height, frame_width = frame.shape[:2]
         cropped_frame = frame[int(frame_height/4):int(frame_height*0.92), int(frame_width*0.2):(frame_width-int(frame_width*0.2))]
         cv2.rectangle(frame,(int(frame_width*0.2),int(frame_height/4)),((frame_width-int(frame_width*0.2)),int(frame_height*0.92)),(255,0,0),2)
@@ -89,20 +86,14 @@ if __name__=="__main__":
         possible_plates = plateDetector.find_possible_plates(cropped_frame)
         if possible_plates:
             distance = tracking(coordinates, plateDetector.corresponding_area[0])
-            # print 'distance = ', distance
             coordinates = plateDetector.corresponding_area[0]
             if (distance < 40):
             # if (distance < 40 and len(plates_value) < 6):
                 if(i<5):
                     for plates in possible_plates:
-                        segmented_characters = segment_from_plate(plates)
-                        
-                        if segmented_characters:
-                            cv2.imshow('Plate', plates)
-                            input_segmments.append(segmented_characters)
-                            #threading.Thread(target=myNetwork.label_image_list(segmented_characters, 128)).start()
-                            #processes.append(mp.Process(target=recognized_plate, args=(segmented_characters, 128)))
-                            i = i+1
+                        cv2.imshow('Plate', plates)
+                        input_segmments.append(plateDetector.characters_on_plate)
+                        i = i+1
                 elif(i==5):
                     threading.Thread(target=recognized_plate, args=(input_segmments, 128)).start()
                     
@@ -110,9 +101,8 @@ if __name__=="__main__":
             else:
                 i = 0
                 input_segmments = []
-                
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
     cv2.destroyAllWindows()
-    #test
