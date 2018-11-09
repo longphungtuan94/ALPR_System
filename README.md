@@ -1,7 +1,7 @@
 # ALPR_System
 _An Automatic License Plate Recognition System for Vietnamese Plates_
 
-This system can detect 2 types of license plate in Vietnam, rectangle plates and square plates. Currently this version supports only character recognition for rectangle plates.
+This system can detect and recognize 2 types of license plate in Vietnam, rectangle plates and square plates.
 
 # Abstract
 - Write something here
@@ -15,7 +15,7 @@ This system can detect 2 types of license plate in Vietnam, rectangle plates and
 
 # Requirements
 - Python 2.7
-- OpenCV 3.4.2, Tensorflow 1.11.0
+- OpenCV 3.4.2, Tensorflow 1.11.0, scikit-image
 
 # Implementation
 - run `test.py` for testing
@@ -30,3 +30,4 @@ This system can detect 2 types of license plate in Vietnam, rectangle plates and
 - Or full link https://google.com
 
 # TODO
+- Retraining the Neural Network for higher recognition accuracy
