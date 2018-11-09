@@ -120,6 +120,7 @@ class PlateDetector():
     def check_plate(self, input_img, contours):
         possible_plates = []
         self.corresponding_area = []
+        self.char_on_plate = []
         for i, cnt in enumerate(contours):
             min_rect = cv2.minAreaRect(cnt)
             x,y,w,h = cv2.boundingRect(cnt)
@@ -137,12 +138,13 @@ class PlateDetector():
                 if(isMaxWhite(after_validation_img)):
                     after_clean_plate_img, plateFound, coordinates = self.clean_plate(after_validation_img)
                     if plateFound:
-                        self.characters_on_plate = self.find_characters_on_plate(after_clean_plate_img)
-                        if (self.characters_on_plate is not None and len(self.characters_on_plate) > 5):
+                        characters_on_plate = self.find_characters_on_plate(after_clean_plate_img)
+                        if (characters_on_plate is not None and len(characters_on_plate) > 5):
                             possible_plates.append(after_clean_plate_img)
                             x1, y1, w1, h1 = coordinates
                             coordinates = x1+x, y1+y
                             self.corresponding_area.append(coordinates)
+                            self.char_on_plate.append(characters_on_plate)
                         # possible_plates.append(after_clean_plate_img)
                         # x1, y1, w1, h1 = coordinates
                         # coordinates = x1+x, y1+y

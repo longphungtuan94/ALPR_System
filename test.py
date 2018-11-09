@@ -12,8 +12,8 @@ import threading
 from collections import Counter
 import multiprocessing as mp
 
-plateDetector = PlateDetector(type_of_plate='RECT_PLATE') # Initialize the plate detector
-myNetwork = NeuralNetwork("model/128_0.50_ver2.pb", "model/128_0.50_labels_ver2.txt") # Initialize the Neural Network
+plateDetector = PlateDetector(type_of_plate='SQUARE_PLATE') # Initialize the plate detector
+myNetwork = NeuralNetwork("model/ver3/128_0.50_ver3.pb", "model/ver3/128_0.50_labels_ver3.txt") # Initialize the Neural Network
 
 # calculates the distance between two points in the image
 def getDistance(pointA, pointB):
@@ -60,7 +60,7 @@ def recognized_plate(input_segmments, size):
     
     print("threading time: " + str(time.time() - t0))
 
-cap = cv2.VideoCapture('test_videos/plate_2.MOV')
+cap = cv2.VideoCapture('test_videos/plate_9.MOV')
 coordinates = (0, 0)
 plates_value = []
 plates_length = []
@@ -92,7 +92,7 @@ if __name__=="__main__":
                 if(i<5):
                     for plates in possible_plates:
                         cv2.imshow('Plate', plates)
-                        input_segmments.append(plateDetector.characters_on_plate)
+                        input_segmments.append(plateDetector.char_on_plate[0])
                         i = i+1
                 elif(i==5):
                     threading.Thread(target=recognized_plate, args=(input_segmments, 128)).start()
