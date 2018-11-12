@@ -77,9 +77,9 @@ class PlateDetector():
         if angle < (-45):
             angle += 90
         
-	# If angle = 0, no need to rotate it
-	if angle == 0:
-	    return plate
+        # If angle = 0, no need to rotate it
+        if angle == 0:
+            return plate
 
         # Center of rectangle in source image
         center = ((x1 + x2)/2,(y1 + y2)/2)
