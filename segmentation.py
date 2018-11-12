@@ -17,7 +17,7 @@ def isCharacter(plate_image, contour):
     ratioCharacter = float(contour_height)/float(plate_height)
     # print ratioCharacter
     # print ratio
-    if ((ratio >= 10 and ratio < 43) and (ratioCharacter >= 0.5) and (float(contour_height)/float(contour_width) > 1.2)):
+    if ((ratio >= 10 and ratio < 43) and (contour_height > contour_width) and (ratioCharacter >= 0.5) and (float(contour_height)/float(contour_width) > 1.2)):
         return True
     else:
         return False
@@ -98,6 +98,7 @@ def segment_characters_from_plate(plate_img, fixed_width):
     charCandidates = np.zeros(thresh.shape, dtype='uint8')
 
     # loof over the unique components
+    characters = []
     for label in np.unique(labels):
         # if this is the background label, ignore it
         if label == 0:
@@ -111,6 +112,7 @@ def segment_characters_from_plate(plate_img, fixed_width):
         
         # ensure at least one contour was found in the mask
         if len(cnts) > 0:
+
             # grab the largest contour which corresponds to the component in the mask, then
             # grab the bounding box for the contour
             c = max(cnts, key=cv2.contourArea)
@@ -128,23 +130,44 @@ def segment_characters_from_plate(plate_img, fixed_width):
             keepHeight = heightRatio > 0.5 and heightRatio < 0.95
             
             # check to see if the component passes all the tests
-            if keepAspectRatio and keepSolidity and keepHeight and boxW > 10:
+            if keepAspectRatio and keepSolidity and keepHeight and boxW > 14:
                 # compute the convex hull of the contour and draw it on the character
                 # candidates mask
                 hull = cv2.convexHull(c)
                 cv2.drawContours(charCandidates, [hull], -1, 255, -1)
-    # cv2.imshow('test', charCandidates)
+
+    # cv2.imshow('charC', charCandidates)
     # cv2.waitKey(0)
     _, contours, hier = cv2.findContours(charCandidates, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
         contours = sort_contours_left_to_right(contours)
         characters = []
+        plate_copy = plate_img
         for c in contours:
             (x,y,w,h) = cv2.boundingRect(c)
-            temp = plate_img[y:y+h, x:x+w]
+            if y > 2:
+                y = y - 2
+            else:
+                y = 0
+            if x > 2:
+                x = x - 2
+            else:
+                x = 0
+            temp = plate_img[y:y+h+4, x:x+w+4]
             # cv2.imshow('temp', temp)
             # cv2.waitKey(0)
             characters.append(temp)
         return characters
     else:
         return None
+
+    #             temp = plate_img[boxY:boxY+boxH, boxX:boxX+boxW]
+    #             # cv2.imshow('temp', temp)
+    #             # cv2.waitKey(0)
+    #             characters.append((temp, boxX))
+    # if len(characters) > 0:
+    #     characters = sorted(characters, key=lambda x: x[1]) # sort the character images from left to right based on the coordinates
+    #     characters = zip(*characters)
+    #     return characters[0]
+    # else:
+    #     return None
