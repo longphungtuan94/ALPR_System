@@ -17,7 +17,7 @@ def isCharacter(plate_image, contour):
     ratioCharacter = float(contour_height)/float(plate_height)
     # print ratioCharacter
     # print ratio
-    if ((ratio >= 10 and ratio < 43) and (contour_height > contour_width) and (ratioCharacter >= 0.5) and (float(contour_height)/float(contour_width) > 1.2)):
+    if ((ratio >= 10 and ratio < 43) and (ratioCharacter >= 0.5) and (float(contour_height)/float(contour_width) > 1.2)):
         return True
     else:
         return False
