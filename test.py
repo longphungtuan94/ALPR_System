@@ -13,7 +13,7 @@ from collections import Counter
 import multiprocessing as mp
 
 plateDetector = PlateDetector(type_of_plate='RECT_PLATE', minPlateArea=3000, maxPlateArea=30000) # Initialize the plate detector
-myNetwork = NeuralNetwork(modelFile="model/128_0.50_ver4.pb", labelFile="model/128_0.50_labels_ver4.txt") # Initialize the Neural Network
+myNetwork = NeuralNetwork(modelFile="model/128_0.50_ver5.pb", labelFile="model/128_0.50_labels_ver4.txt") # Initialize the Neural Network
 
 # calculates the distance between two points in the image
 def getDistance(pointA, pointB):
