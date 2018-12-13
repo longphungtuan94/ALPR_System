@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+
 from segmentation import segment_characters_from_plate
 
 class PlateDetector():
@@ -19,8 +20,8 @@ class PlateDetector():
         self.char_on_plate = []
         self.corresponding_area = []
 
-        self.threshold_image = self.preprocess(input_img)
-        possible_plate_contours = self.extract_contours(self.threshold_image)
+        self.after_preprocess = self.preprocess(input_img)
+        possible_plate_contours = self.extract_contours(self.after_preprocess)
 
         for cnts in possible_plate_contours:
             plate, characters_on_plate, coordinates =  self.check_plate(input_img, cnts)
@@ -51,20 +52,27 @@ class PlateDetector():
                 charactersFound = upper_charactersFound + lower_charactersFound
                 return charactersFound
 
-
     def preprocess(self, input_img):
         imgBlurred = cv2.GaussianBlur(input_img, (7, 7), 0) # old window was (5,5)
         gray = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY) # convert to gray
         sobelx = cv2.Sobel(gray, cv2.CV_8U, 1, 0, ksize=3) # sobelX to get the vertical edges
-        ret2,threshold_img = cv2.threshold(sobelx, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        return threshold_img
-        
-    def extract_contours(self, threshold_img):
+        ret2, threshold_img = cv2.threshold(sobelx, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
         element = self.element_structure
         morph_img_threshold = threshold_img.copy()
         cv2.morphologyEx(src=threshold_img, op=cv2.MORPH_CLOSE, kernel=element, dst=morph_img_threshold)
-        self.morphed_image = morph_img_threshold
-        _, extracted_contours ,_ = cv2.findContours(morph_img_threshold, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
+        return morph_img_threshold
+
+    def preprocess2(self, input_img):
+        gray = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
+        # noise_removal = cv2.bilateralFilter(gray,9,75,75)
+        # equal_histogram = cv2.equalizeHist(noise_removal)
+        # ret, thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 315, 0)
+        return thresh
+        
+    def extract_contours(self, after_preprocess):
+        _, extracted_contours ,_ = cv2.findContours(after_preprocess, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
         return extracted_contours
         
         # Rotate the plate
@@ -116,8 +124,9 @@ class PlateDetector():
             x,y,w,h = cv2.boundingRect(max_cnt)
             rect = cv2.minAreaRect(max_cnt)
             rotatedPlate = self.crop_rotated_contour(plate, rect)
-            if not self.ratioCheck(max_cntArea, w, h):
+            if not self.ratioCheck(max_cntArea, rotatedPlate.shape[1], rotatedPlate.shape[0]):
                 return plate, False, None
+            # print rotatedPlate.shape[1]/float(rotatedPlate.shape[0])
             return rotatedPlate, True, [x, y, w, h]
         else:
             return plate, False, None
@@ -145,14 +154,31 @@ class PlateDetector():
         max = self.maxPlateArea
         if (self.type_of_plate == 0):
             ratioMin = 3
-            ratioMax = 7
+            ratioMax = 6
         else:
-            ratioMin = 0.5
-            ratioMax = 1.5
+            ratioMin = 1
+            ratioMax = 2
         ratio = float(width)/float(height)
         if ratio < 1:
             ratio = 1/ratio
         
+        if (area < min or area > max) or (ratio < ratioMin or ratio > ratioMax):
+            return False
+        return True
+    
+    def preRatioCheck(self, area, width, height):
+        min = self.minPlateArea
+        max = self.maxPlateArea
+        if (self.type_of_plate == 0):
+            ratioMin = 2.5
+            ratioMax = 7
+        else:
+            ratioMin = 0.8
+            ratioMax = 2.5
+        ratio = float(width)/float(height)
+        if ratio < 1:
+            ratio = 1/ratio
+
         if (area < min or area > max) or (ratio < ratioMin or ratio > ratioMax):
             return False
         return True
@@ -171,7 +197,7 @@ class PlateDetector():
             return False
 
         area = width*height
-        if not self.ratioCheck(area, width, height):
+        if not self.preRatioCheck(area, width, height):
             return False
         else:
             return True

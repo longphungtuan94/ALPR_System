@@ -91,7 +91,8 @@ def segment_characters_from_plate(plate_img, fixed_width):
     # resize the license plate region to a canoncial size
     plate_img = imutils.resize(plate_img, width=fixed_width)
     thresh = imutils.resize(thresh, width=fixed_width)
-    
+    convert_thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+
     # perform a connected components analysis and initialize the mask to store the locations
     # of the character candidates
     labels = measure.label(thresh, neighbors=8, background=0)
@@ -143,17 +144,22 @@ def segment_characters_from_plate(plate_img, fixed_width):
         contours = sort_contours_left_to_right(contours)
         characters = []
         plate_copy = plate_img
+        _coordinates = [cv2.boundingRect(c)[1] for c in contours]
+        min_index = np.argmin(_coordinates)
+        y_min = _coordinates[min_index]
+
+        addPixel = 4 # value to be added to each dimension of the character
         for c in contours:
             (x,y,w,h) = cv2.boundingRect(c)
-            if y > 2:
-                y = y - 2
+            if y > addPixel:
+                y = y - addPixel
             else:
                 y = 0
-            if x > 2:
-                x = x - 2
+            if x > addPixel:
+                x = x - addPixel
             else:
                 x = 0
-            temp = plate_img[y:y+h+4, x:x+w+4]
+            temp = convert_thresh[y:y+h+(addPixel*2), x:x+w+(addPixel*2)]
             # cv2.imshow('temp', temp)
             # cv2.waitKey(0)
             characters.append(temp)
