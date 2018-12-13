@@ -12,7 +12,7 @@ import multiprocessing as mp
 from class_CNN import NeuralNetwork
 from class_PlateDetection import PlateDetector
 
-plateDetector = PlateDetector(type_of_plate='RECT_PLATE', minPlateArea=5000, maxPlateArea=30000) # Initialize the plate detector
+plateDetector = PlateDetector(type_of_plate='RECT_PLATE', minPlateArea=3000, maxPlateArea=30000) # Initialize the plate detector
 myNetwork = NeuralNetwork(modelFile="model/binary_128_0.50_ver2.pb", labelFile="model/binary_128_0.50_labels_ver2.txt") # Initialize the Neural Network
 
 # calculates the distance between two points in the image
