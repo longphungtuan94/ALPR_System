@@ -15,7 +15,7 @@ This system can detect and recognize 2 types of license plate in Vietnam, rectan
 
 # Requirements
 - Python 2.7
-- OpenCV 3.4.2, Tensorflow 1.11.0, scikit-image
+- OpenCV 3.4.2, imutils, Tensorflow 1.11.0, scikit-image
 
 # Implementation
 - run `test.py` for testing
