@@ -4,7 +4,8 @@ _An Automatic License Plate Recognition System for Vietnamese Plates_
 This system can detect and recognize 2 types of license plate in Vietnam, rectangle plates and square plates.
 
 # Abstract
-- Write something here
+- This system can detect and recognize license plates from images, videos and webcams.
+- Within this project, the camera's position is fixed and only one car at a time can drive through the gate. Therefore, the system is only able to detect 1 plate at a time although there may be two or more plate in the current frame.
 # Method
 1. Plate detection
    - Sobel X for detecting vertical edges followed by a morphological transformation
@@ -30,4 +31,5 @@ This system can detect and recognize 2 types of license plate in Vietnam, rectan
 - Or full link https://google.com
 
 # TODO
+- Upgrade the tracking algorithm to be able to track 2 or more plates at a time
 - Retraining the Neural Network for higher recognition accuracy
