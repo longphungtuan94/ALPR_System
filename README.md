@@ -1,4 +1,4 @@
-# ALPR_System
+# Vietnamese ALPR_System
 _An Automatic License Plate Recognition System for Vietnamese Plates_
 
 This system can detect and recognize 2 types of license plate in Vietnam, rectangle plates and square plates.
