@@ -103,14 +103,3 @@ def segment_characters_from_plate(plate_img, fixed_width):
         return characters
     else:
         return None
-
-    #             temp = plate_img[boxY:boxY+boxH, boxX:boxX+boxW]
-    #             # cv2.imshow('temp', temp)
-    #             # cv2.waitKey(0)
-    #             characters.append((temp, boxX))
-    # if len(characters) > 0:
-    #     characters = sorted(characters, key=lambda x: x[1]) # sort the character images from left to right based on the coordinates
-    #     characters = zip(*characters)
-    #     return characters[0]
-    # else:
-    #     return None
