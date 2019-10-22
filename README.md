@@ -24,12 +24,3 @@ This system can detect and recognize 2 types of license plate in Vietnam, rectan
 # Result
 - ![Demo](https://github.com/longphungtuan94/ALPR_System/blob/master/test_videos/screenshot_1.png)
 - ![Demo2](https://github.com/longphungtuan94/ALPR_System/blob/master/test_videos/screenshot_2.png)
-
-
-# References
-- Short link [paper](https://google.com)
-- Or full link https://google.com
-
-# TODO
-- Upgrade the tracking algorithm to be able to track 2 or more plates at a time
-- Retraining the Neural Network for higher recognition accuracy

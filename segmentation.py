@@ -8,8 +8,11 @@ import imutils
 from skimage.filters import threshold_local
 from skimage import measure
 
-# Sort contours from left to right
+
 def sort_contours_left_to_right(character_contours):
+    """
+    Sort contours from left to right
+    """
     i = 0
     boundingBoxes = [cv2.boundingRect(c) for c in character_contours]
     (character_contours, boundingBoxes) = zip(*sorted(zip(character_contours, boundingBoxes),
@@ -18,8 +21,10 @@ def sort_contours_left_to_right(character_contours):
 
 
 def segment_characters_from_plate(plate_img, fixed_width):
-    # extract the Value component from the HSV color space and apply adaptive thresholding
-    # to reveal the characters on the license plate
+    """
+    extract the Value component from the HSV color space and apply adaptive thresholding
+    to reveal the characters on the license plate
+    """
     V = cv2.split(cv2.cvtColor(plate_img, cv2.COLOR_BGR2HSV))[2]
     T = threshold_local(V, 29, offset=15, method='gaussian')
     thresh = (V > T).astype('uint8') * 255
@@ -28,7 +33,7 @@ def segment_characters_from_plate(plate_img, fixed_width):
     # resize the license plate region to a canoncial size
     plate_img = imutils.resize(plate_img, width=fixed_width)
     thresh = imutils.resize(thresh, width=fixed_width)
-    convert_thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+    bgr_thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 
     # perform a connected components analysis and initialize the mask to store the locations
     # of the character candidates
@@ -74,16 +79,10 @@ def segment_characters_from_plate(plate_img, fixed_width):
                 hull = cv2.convexHull(c)
                 cv2.drawContours(charCandidates, [hull], -1, 255, -1)
 
-    # cv2.imshow('charC', charCandidates)
-    # cv2.waitKey(0)
     _, contours, hier = cv2.findContours(charCandidates, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
         contours = sort_contours_left_to_right(contours)
         characters = []
-        plate_copy = plate_img
-        _coordinates = [cv2.boundingRect(c)[1] for c in contours]
-        min_index = np.argmin(_coordinates)
-        y_min = _coordinates[min_index]
 
         addPixel = 4 # value to be added to each dimension of the character
         for c in contours:
@@ -96,9 +95,7 @@ def segment_characters_from_plate(plate_img, fixed_width):
                 x = x - addPixel
             else:
                 x = 0
-            temp = convert_thresh[y:y+h+(addPixel*2), x:x+w+(addPixel*2)]
-            # cv2.imshow('temp', temp)
-            # cv2.waitKey(0)
+            temp = bgr_thresh[y:y+h+(addPixel*2), x:x+w+(addPixel*2)]
             characters.append(temp)
         return characters
     else:

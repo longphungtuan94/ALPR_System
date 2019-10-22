@@ -25,6 +25,7 @@ import numpy as np
 import tensorflow as tf
 import cv2
 
+
 class NeuralNetwork():
 
   def __init__(self, modelFile, labelFile):
@@ -45,6 +46,7 @@ class NeuralNetwork():
       tf.import_graph_def(graph_def)
     return graph
 
+
   def load_labels(self, labelFile):
     label = []
     proto_as_ascii_lines = tf.gfile.GFile(labelFile).readlines()
@@ -52,16 +54,25 @@ class NeuralNetwork():
       label.append(l.rstrip())
     return label
 
+
   def read_tensor_from_image(self, image, imageSizeOuput):
+    """
+    inputs an image and converts to a tensor
+    """
     image = cv2.resize(image, dsize=(imageSizeOuput, imageSizeOuput), interpolation = cv2.INTER_CUBIC)
     np_image_data = np.asarray(image)
     np_image_data = cv2.normalize(np_image_data.astype('float'), None, -0.5, .5, cv2.NORM_MINMAX)
     np_final = np.expand_dims(np_image_data,axis=0)
     return np_final
 
+
   def label_image(self, tensor):
+    """
+    for MobileNet
+    """
     input_name = "import/input"
     output_name = "import/final_result"
+
     input_operation = self.graph.get_operation_by_name(input_name);
     output_operation = self.graph.get_operation_by_name(output_name);
 
@@ -71,6 +82,7 @@ class NeuralNetwork():
     labels = self.label
     top_k = results.argsort()[-1:][::-1]
     return labels[top_k[0]]
+    
 
   def label_image_list(self, listImages, imageSizeOuput):
     plate = ""

@@ -2,113 +2,119 @@ import numpy as np
 import cv2
 import tensorflow
 import time
-import argparse
-import glob
-import math
 import threading
-from collections import Counter
 import multiprocessing as mp
 
 from class_CNN import NeuralNetwork
 from class_PlateDetection import PlateDetector
+from average_plate import *
+from find_best_quality_images import get_best_images
 
-plateDetector = PlateDetector(type_of_plate='RECT_PLATE', minPlateArea=3000, maxPlateArea=30000) # Initialize the plate detector
-myNetwork = NeuralNetwork(modelFile="model/binary_128_0.50_ver3.pb", labelFile="model/binary_128_0.50_labels_ver2.txt") # Initialize the Neural Network
+########### INIT ###########
+# Initialize the plate detector
+plateDetector = PlateDetector(type_of_plate='RECT_PLATE',
+                                        minPlateArea=4100,
+                                        maxPlateArea=15000)
 
-# calculates the distance between two points in the image
-def getDistance(pointA, pointB):
-     return math.sqrt(math.pow((pointA[0] - pointB[0]), 2) + math.pow((pointA[1] - pointB[1]), 2))
+# Initialize the Neural Network
+myNetwork = NeuralNetwork(modelFile="model/binary_128_0.50_ver3.pb",
+                            labelFile="model/binary_128_0.50_labels_ver2.txt")
 
-def tracking(previous_coordinate, current_coordinate):
-    distance = getDistance(previous_coordinate, current_coordinate)
-    return distance
-
-def get_average_plate_value(plates, plates_length):
-    # plates_length is an array containing the number of characters detected on each plate in plate array
-    plates_to_be_considered = []
-    number_char_on_plate = Counter(plates_length).most_common(1)[0][0]
-    for plate in plates:
-        if (len(plate) == number_char_on_plate):
-            plates_to_be_considered.append(plate)
-
-    temp = ''
-    for plate in plates_to_be_considered:
-        temp = temp + plate
-    
-    counter = 0
-    final_plate = ''
-    for i in range(number_char_on_plate):
-        my_list = []
-        for i in range(len(plates_to_be_considered)):
-            my_list.append(temp[i*number_char_on_plate + counter])
-        final_plate = final_plate + str(Counter(my_list).most_common(1)[0][0])
-        counter += 1
-    return final_plate
+list_char_on_plate = [] # contains an array of the segmented characters in each frame
+countPlates = 0 # count the number of same plates
+recog_plate = ''
+coordinates = (0, 0)
+num_frame_without_plates = 0
+countPlates_threshold = 11 # the maximum number of images of the same plate to get
+###########################
 
 
-def recognized_plate(input_segmments, size):
+def recognized_plate(list_char_on_plate, size):
+    """
+    input is a list that contains a images of the same plate
+    get the best images in the list
+    calculates the average plate
+    """
+    global recog_plate
+
     t0 = time.time()
-    
     plates_value = []
     plates_length = []
-    for segmented_characters in input_segmments:
-        plate, len_plate = myNetwork.label_image_list(segmented_characters, size)
+
+    list_char_on_plate = get_best_images(list_char_on_plate, num_img_return=7) # get the best images
+
+    for segmented_characters in list_char_on_plate:
+        plate, len_plate = myNetwork.label_image_list(segmented_characters[1], size)
         plates_value.append(plate)
         plates_length.append(len_plate)
         
-    final_plate = get_average_plate_value(plates_value, plates_length)   
+    final_plate = get_average_plate_value(plates_value, plates_length) # calculates the average plate
+    if len(final_plate) > 7:
+        if (final_plate[2] == '8'):
+            final_plate = final_plate[:2] + 'B' + final_plate[3:]
+        elif (final_plate[2] == '0'):
+            final_plate = final_plate[:2] + 'D' + final_plate[3:]
+    recog_plate = final_plate  
+
     print("recognized plate: " + final_plate)
-    
     print("threading time: " + str(time.time() - t0))
 
-cap = cv2.VideoCapture('test_videos/test.MOV')
-# cap = cv2.VideoCapture(0)
-coordinates = (0, 0)
-plates_value = []
-plates_length = []
-processes = []
-input_segmments = []
-i = 0 
+cap = cv2.VideoCapture('test_videos/test.MOV') # video path
 
 if __name__=="__main__":
     while(cap.isOpened()):
         ret, frame = cap.read()
-        
         if (frame is None):
             print("[INFO] End of Video")
             break
-    
-        # frame = cv2.resize(frame, (1024, 768))
+
+        _frame = cv2.resize(frame, (960, 540)) # resize the frame to fit the screen
         frame_height, frame_width = frame.shape[:2]
-        cropped_frame = frame[int(frame_height*0.3):frame_height, 0:int(frame_width*0.8)]
-        cv2.rectangle(frame, (0, int(frame_height*0.3)), (int(frame_width*0.8), frame_height), (255, 0, 0), 2)
-        # cropped_frame = frame[int(frame_height/4):int(frame_height*0.92), int(frame_width*0.2):(frame_width-int(frame_width*0.2))]
-        # cv2.rectangle(_frame,(int(frame_width*0.2),int(frame_height/4)),((frame_width-int(frame_width*0.2)),int(frame_height*0.92)),(255,0,0),2)
-        cv2.imshow('video', frame)
+        _frame_height, _frame_width = _frame.shape[:2]
+        cropped_frame = frame[int(frame_height*0.3):frame_height, 0:int(frame_width*0.8)] # crop the ROI
+        cv2.rectangle(_frame, (0, int(_frame_height*0.3)), (int(_frame_width*0.8), _frame_height), (255, 0, 0), 2) # draw a
+        # rectangle to locate the ROI
+
+        # print the result
+        cv2.rectangle(_frame, (0, 0), (190, 40), (0, 0, 0), -1)
+        cv2.putText(_frame, recog_plate, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+        # out.write(_frame)
+        cv2.imshow('video', _frame)
         
         possible_plates = plateDetector.find_possible_plates(cropped_frame)
+        # cv2.imshow('morphed', plateDetector.after_preprocess)
         if possible_plates is not None:
-            distance = tracking(coordinates, plateDetector.corresponding_area[0])
-            coordinates = plateDetector.corresponding_area[0]
-            if (distance < 40):
-                if(i < 5):
-                    for plates in possible_plates:
-                        cv2.imshow('Plate', plates)
-                        # for c in plateDetector.char_on_plate[0]:
-                        #     cv2.imshow('c', c)
-                        #     cv2.waitKey(0)
-                        # myNetwork.label_image_list(plateDetector.char_on_plate[0], 128)
-                        input_segmments.append(plateDetector.char_on_plate[0])
-                        i = i+1
-                elif(i==5):
-                    threading.Thread(target=recognized_plate, args=(input_segmments, 128)).start()
-                    
-                    i = i+1
+            num_frame_without_plates = 0
+            distance = tracking(coordinates, plateDetector.corresponding_area[0]) # calculates the distance between two plates
+            coordinates = plateDetector.corresponding_area[0] # get the coordinate of the detected plate
+            if (distance < 100):
+                if(countPlates < countPlates_threshold):
+                    cv2.imshow('Plate', possible_plates[0])
+                    # print possible_plates[0].shape[0]*possible_plates[0].shape[1]
+
+                    temp = []
+                    temp.append(possible_plates[0])
+                    temp.append(plateDetector.char_on_plate[0]) # temp = [image of plate, segmented characters on plate]
+
+                    list_char_on_plate.append(temp)
+                    countPlates += 1
+                elif(countPlates == countPlates_threshold):
+                    # create a new thread for image recognition
+                    threading.Thread(target=recognized_plate, args=(list_char_on_plate, 128)).start()
+                    countPlates += 1
             else:
-                # if (i < 5 and i > 0):
-                #     recognized_plate(input_segmments, 128)
-                i = 0
-                input_segmments = []
+                countPlates = 0
+                list_char_on_plate = []
+
+        # the program will try to catch 11 images of the same plate and then pick the top 7 best
+        # quality images out of 11. However, if the program cannot catch enough images, after
+        # num_frame_without_plates frames without plates, it will process the and calculate the
+        # final plate
+        if (possible_plates == None):
+            num_frame_without_plates += 1
+            if (countPlates <= countPlates_threshold and countPlates > 0 and num_frame_without_plates > 5):
+                threading.Thread(target=recognized_plate, args=(list_char_on_plate, 128)).start()
+                countPlates = 0
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
-
 from segmentation import segment_characters_from_plate
+
 
 class PlateDetector():
     def __init__(self, type_of_plate, minPlateArea, maxPlateArea):
@@ -14,6 +14,7 @@ class PlateDetector():
         if (type_of_plate== 'SQUARE_PLATE'):
             self.element_structure = cv2.getStructuringElement(shape=cv2.MORPH_RECT, ksize=(26, 5))
             self.type_of_plate = 1
+
         
     def find_possible_plates(self, input_img):
         plates = []
@@ -35,6 +36,7 @@ class PlateDetector():
         else:
             return None
 
+
     def find_characters_on_plate(self, plate):
         if (self.type_of_plate == 0): # rectangle plate
             charactersFound = segment_characters_from_plate(plate, 400)
@@ -51,6 +53,7 @@ class PlateDetector():
             if (upper_charactersFound and lower_charactersFound):
                 charactersFound = upper_charactersFound + lower_charactersFound
                 return charactersFound
+                
 
     def preprocess(self, input_img):
         imgBlurred = cv2.GaussianBlur(input_img, (7, 7), 0) # old window was (5,5)
@@ -63,20 +66,16 @@ class PlateDetector():
         cv2.morphologyEx(src=threshold_img, op=cv2.MORPH_CLOSE, kernel=element, dst=morph_img_threshold)
         return morph_img_threshold
 
-    def preprocess2(self, input_img):
-        gray = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
-        # noise_removal = cv2.bilateralFilter(gray,9,75,75)
-        # equal_histogram = cv2.equalizeHist(noise_removal)
-        # ret, thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 315, 0)
-        return thresh
         
     def extract_contours(self, after_preprocess):
-        _, extracted_contours ,_ = cv2.findContours(after_preprocess, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
+        _, extracted_contours, _ = cv2.findContours(after_preprocess, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE)
         return extracted_contours
         
-        # Rotate the plate
-    def crop_rotated_contour(self, plate, rect): # crop the plate with its rotation
+
+    def crop_rotated_contour(self, plate, rect):
+        """
+        Rotate the plate and crop the plate with its rotation
+        """
         box = cv2.boxPoints(rect)
         box = np.int0(box)
         W = rect[1][0]
@@ -109,6 +108,7 @@ class PlateDetector():
         # Final cropped & rotated rectangle
         croppedRotated = cv2.getRectSubPix(cropped, (int(croppedW), int(croppedH)), (size[0]/2, size[1]/2))
         return croppedRotated
+
         
     def clean_plate(self, plate):
         gray = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
@@ -131,6 +131,7 @@ class PlateDetector():
         else:
             return plate, False, None
 
+
     def check_plate(self, input_img, contour):
         min_rect = cv2.minAreaRect(contour)
         if self.validateRotationAndRatio(min_rect):
@@ -147,6 +148,7 @@ class PlateDetector():
                     after_check_plate_img = after_clean_plate_img
                     return after_check_plate_img, characters_on_plate, coordinates
         return None, None, None
+
 
 #################### PLATE FEATURES ####################
     def ratioCheck(self, area, width, height):
@@ -165,6 +167,7 @@ class PlateDetector():
         if (area < min or area > max) or (ratio < ratioMin or ratio > ratioMax):
             return False
         return True
+
     
     def preRatioCheck(self, area, width, height):
         min = self.minPlateArea
@@ -182,6 +185,7 @@ class PlateDetector():
         if (area < min or area > max) or (ratio < ratioMin or ratio > ratioMax):
             return False
         return True
+
 
     def validateRotationAndRatio(self, rect):
         (x, y), (width, height), rect_angle = rect
