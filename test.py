@@ -1,14 +1,10 @@
-import numpy as np
 import cv2
-import tensorflow
 import time
 import threading
-import multiprocessing as mp
-
 from class_CNN import NeuralNetwork
 from class_PlateDetection import PlateDetector
-from average_plate import *
-from find_best_quality_images import get_best_images
+from utils.average_plate import *
+from utils.find_best_quality_images import get_best_images
 
 ########### INIT ###########
 # Initialize the plate detector
@@ -90,8 +86,6 @@ if __name__=="__main__":
             if (distance < 100):
                 if(countPlates < countPlates_threshold):
                     cv2.imshow('Plate', possible_plates[0])
-                    # print possible_plates[0].shape[0]*possible_plates[0].shape[1]
-
                     temp = []
                     temp.append(possible_plates[0])
                     temp.append(plateDetector.char_on_plate[0]) # temp = [image of plate, segmented characters on plate]

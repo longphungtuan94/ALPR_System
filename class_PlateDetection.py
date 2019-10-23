@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from segmentation import segment_characters_from_plate
+from utils.segmentation import segment_characters_from_plate
 
 
 class PlateDetector():
@@ -17,6 +17,9 @@ class PlateDetector():
 
         
     def find_possible_plates(self, input_img):
+        """
+        Find plates candidates
+        """
         plates = []
         self.char_on_plate = []
         self.corresponding_area = []
@@ -126,7 +129,6 @@ class PlateDetector():
             rotatedPlate = self.crop_rotated_contour(plate, rect)
             if not self.ratioCheck(max_cntArea, rotatedPlate.shape[1], rotatedPlate.shape[0]):
                 return plate, False, None
-            # print rotatedPlate.shape[1]/float(rotatedPlate.shape[0])
             return rotatedPlate, True, [x, y, w, h]
         else:
             return plate, False, None
@@ -138,8 +140,6 @@ class PlateDetector():
             x, y, w, h = cv2.boundingRect(contour)
             after_validation_img = input_img[y:y+h, x:x+w]
             after_clean_plate_img, plateFound, coordinates = self.clean_plate(after_validation_img)
-            # cv2.imshow('after', after_validation_img)
-            # cv2.waitKey(0)
             if plateFound:
                 characters_on_plate = self.find_characters_on_plate(after_clean_plate_img)
                 if (characters_on_plate is not None and len(characters_on_plate) > 5):

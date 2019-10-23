@@ -1,6 +1,4 @@
 import cv2
-import imutils
-import numpy
 
 
 def get_best_images(plate_images, num_img_return):

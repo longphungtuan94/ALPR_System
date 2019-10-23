@@ -1,6 +1,5 @@
 """ Gets the recognized plate in several frames and calculates the most possible plate value """
 
-import numpy as np
 import math
 from collections import Counter
 
