@@ -1,4 +1,4 @@
-tensorflow==1.13.1
+tensorflow==1.15.0
 opencv-python==3.4.2.17
 imutils==0.5.3
 scikit-image==0.16.1
